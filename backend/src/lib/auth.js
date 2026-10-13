@@ -13,12 +13,16 @@ export const auth = betterAuth({
     }),
 
     secret: process.env.BETTER_AUTH_SECRET,
-
     baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
 
-   trustedOrigins: [
-  "https://nova-trend-zeta.vercel.app",
-],
+    trustedOrigins: [
+        "https://nova-trend-zeta.vercel.app",
+        "http://localhost:5173",
+    ],
+
+    account: {
+        storeStateStrategy: "cookie",
+    },
 
     emailAndPassword: {
         enabled: true,
