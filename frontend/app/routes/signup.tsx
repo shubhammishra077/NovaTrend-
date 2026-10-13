@@ -93,10 +93,10 @@ export default function SignUp() {
       title: "Redirecting...",
       description: "Taking you to Google to sign in.",
     });
-    const { error: authError } = await authClient.signIn.social({
-      provider: "google",
-      callbackURL: `${API_BASE}/?auth=google`,
-    });
+   const { error: authError } = await authClient.signIn.social({
+  provider: "google",
+  callbackURL: `${window.location.origin}/?auth=google`,
+});
     setSocialLoading(false);
 
     if (authError) {
