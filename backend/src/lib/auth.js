@@ -16,10 +16,9 @@ export const auth = betterAuth({
 
     baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
 
-    trustedOrigins: [
-        "http://localhost:5173",
-        process.env.FRONTEND_URL || "https://nova-trend-zeta.vercel.app",
-    ],
+   trustedOrigins: [
+  "https://nova-trend-zeta.vercel.app",
+],
 
     emailAndPassword: {
         enabled: true,
