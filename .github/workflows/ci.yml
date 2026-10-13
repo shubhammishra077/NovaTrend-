@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend syntax and tests
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: mongodb://127.0.0.1:27017/marketplace_ci?replicaSet=rs0
+      RUN_AUTH_INTEGRATION: "true"
+      BETTER_AUTH_SECRET: ci-only-secret-that-is-at-least-32-characters-long
+      BETTER_AUTH_URL: http://127.0.0.1:5500
+      FRONTEND_URL: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - uses: supercharge/mongodb-github-action@1.12.0
+        with:
+          mongodb-version: 7
+          mongodb-replica-set: rs0
+      - run: npm ci
+        working-directory: backend
+      - run: npx prisma db push
+        working-directory: backend
+      - name: Check backend JavaScript syntax
+        run: find src test -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+        working-directory: backend
+      - run: npm test
+        working-directory: backend
+
+  frontend:
+    name: Frontend typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run typecheck
+        working-directory: frontend

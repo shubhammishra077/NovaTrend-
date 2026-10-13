@@ -1,0 +1,38 @@
+{
+  "name": "backend",
+  "module": "src/server.js",
+  "type": "module",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Multi-user Ecommerce Platform - Backend API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "concurrently -k -n API,Inngest \"node --watch src/server.js\" \"npx --yes inngest-cli@latest dev -u http://localhost:5000/api/inngest\"",
+    "postinstall": "prisma generate",
+    "contract:emit": "prisma contract emit",
+    "test": "node --test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@better-auth/prisma-adapter": "^1.7.1",
+    "@prisma/client": "6.19",
+    "better-auth": "^1.7.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "inngest": "^4.18.1",
+    "morgan": "^1.11.0",
+    "razorpay": "^2.9.8",
+    "resend": "^6.25.0",
+    "uploadthing": "^7.7.4"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6",
+    "prisma": "6.19"
+  }
+}
