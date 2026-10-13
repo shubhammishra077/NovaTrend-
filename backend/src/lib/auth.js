@@ -21,7 +21,7 @@ export const auth = betterAuth({
     ],
 
     account: {
-        storeStateStrategy: "cookie",
+        storeStateStrategy: "database",
     },
 
     emailAndPassword: {
