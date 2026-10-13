@@ -1,9 +1,10 @@
+
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://ecommerce-backend-nine-beta.vercel.app/api/:path*"
+      "destination": "https://nova-trend-s5wt.vercel.app/api/:path*"
     }
   ]
 }
