@@ -26,14 +26,29 @@ import { adminBlogPostsRouter, publicBlogPostsRouter } from "./routes/blog-posts
 import askAiRoutes from "./routes/ask-ai.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+const FRONTEND_URLS = [
+    "https://nova-trend-zeta.vercel.app",
+    "http://localhost:5173",
+    ...(process.env.FRONTEND_URL
+        ? process.env.FRONTEND_URL.split(",").map(url => url.trim().replace(/\/$/, ""))
+        : []),
+];
+
 app.use(helmet());
-// Global CORS
+
 app.use(cors({
-    origin: FRONTEND_URL,
+    origin: (origin, callback) => {
+        if (!origin || FRONTEND_URLS.includes(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error(`CORS origin not allowed: ${origin}`));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 }));
+
 app.use(morgan("dev"));
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.post("/api/webhooks/razorpay", express.raw({ type: "application/json" }), handleRazorpayWebhook);
