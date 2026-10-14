@@ -92,3 +92,20 @@ export function useUpdateOrderStatus() {
     },
   });
 }
+
+export function useMarkCodPaymentReceived() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id }: { id: string }) =>
+      api.patch<{ order: SellerOrder }>(
+        `/api/orders/${id}/cod-payment`
+      ),
+
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["seller-orders"] });
+      qc.invalidateQueries({ queryKey: ["my-orders"] });
+      qc.invalidateQueries({ queryKey: ["order"] });
+    },
+  });
+}

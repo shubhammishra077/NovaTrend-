@@ -19,7 +19,13 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Empty, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "@/components/ui/empty";
 import { SearchInput } from "@/components/globals/search-input";
 import { DataPagination } from "@/components/globals/data-pagination";
-import { useSellerOrders, useUpdateOrderStatus } from "@/hooks/use-orders";
+
+import {
+  useSellerOrders,
+  useUpdateOrderStatus,
+  useMarkCodPaymentReceived,
+} from "@/hooks/use-orders";
+
 import { toast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/currency";
 
@@ -74,6 +80,7 @@ export default function SellerOrders() {
   });
 
   const updateStatus = useUpdateOrderStatus();
+  const markCodPayment = useMarkCodPaymentReceived();
 
   const orders = data?.orders ?? [];
   const total = data?.total ?? 0;
@@ -104,6 +111,27 @@ export default function SellerOrders() {
       }
     );
   }
+  
+function handleMarkCodPaid(orderId: string) {
+  markCodPayment.mutate(
+    { id: orderId },
+    {
+      onSuccess: () => {
+        toast.add({
+          type: "success",
+          title: "COD payment marked as paid",
+        });
+      },
+      onError: (e) => {
+        toast.add({
+          type: "error",
+          title: e.message || "Failed to update COD payment",
+        });
+      },
+    }
+  );
+}
+
 
   function toggleExpanded(id: string) {
     setExpanded((prev) => {
@@ -420,6 +448,24 @@ export default function SellerOrders() {
                                       </div>
                                     ))}
                                   </div>
+                                  
+{order.paymentMethod === "cod" &&
+  order.paymentStatus === "pending" &&
+  order.status === "delivered" && (
+    <div className="mt-4 flex justify-end">
+      <Button
+        type="button"
+        disabled={markCodPayment.isPending}
+        onClick={() => handleMarkCodPaid(order.id)}
+        className="rounded-full"
+      >
+        {markCodPayment.isPending
+          ? "Updating payment..."
+          : "Mark COD as Paid"}
+      </Button>
+    </div>
+  )}
+
                                   {order.items.length > 4 && (
                                     <p className="mt-3 text-center text-xs text-muted-foreground">
                                       Showing {order.items.length} of {order.items.length} items in this order
