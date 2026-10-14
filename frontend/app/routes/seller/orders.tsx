@@ -449,9 +449,11 @@ function handleMarkCodPaid(orderId: string) {
                                     ))}
                                   </div>
                                   
-{order.paymentMethod === "cod" &&
-  order.paymentStatus === "pending" &&
-  order.status === "delivered" && (
+
+{order.paymentMethod?.toLowerCase() === "cod" &&
+  order.paymentStatus?.toLowerCase() === "pending" &&
+  (order.status?.toLowerCase() === "delivered" ||
+    order.deliveryStatus?.toLowerCase() === "delivered") && (
     <div className="mt-4 flex justify-end">
       <Button
         type="button"
@@ -465,6 +467,7 @@ function handleMarkCodPaid(orderId: string) {
       </Button>
     </div>
   )}
+
 
                                   {order.items.length > 4 && (
                                     <p className="mt-3 text-center text-xs text-muted-foreground">
