@@ -456,3 +456,117 @@ export async function updateOrderStatus(req, res) {
         return handleControllerError(res, e, "updateOrderStatus error:");
     }
 }
+
+export async function markCodPaymentReceived(req, res) {
+    try {
+        const session = req.session;
+
+        const seller = await prisma.seller.findUnique({
+            where: { userId: session.user.id },
+        });
+
+        if (!seller) {
+            return res.status(404).json({
+                error: "Seller profile not found",
+            });
+        }
+
+        const id = requireObjectId(req.params.id, "id");
+
+        const updated = await prisma.$transaction(async (tx) => {
+            const order = await tx.order.findUnique({
+                where: { id },
+                include: { items: true },
+            });
+
+            if (!order) {
+                throw new OrderRequestError(404, "Order not found");
+            }
+
+            if (!canSellerUpdateOrder(seller.id, order.items)) {
+                throw new OrderRequestError(
+                    409,
+                    "You cannot update this order."
+                );
+            }
+
+            if (order.status === ORDER_STATUS.CANCELLED) {
+                throw new OrderRequestError(
+                    409,
+                    "Cancelled orders cannot be marked paid."
+                );
+            }
+
+            if (order.paymentMethod !== PAYMENT_METHOD.COD) {
+                throw new OrderRequestError(
+                    409,
+                    "Only COD orders can be marked paid manually."
+                );
+            }
+
+            if (order.status !== ORDER_STATUS.DELIVERED) {
+                throw new OrderRequestError(
+                    409,
+                    "Mark the order as delivered before recording COD payment."
+                );
+            }
+
+            if (order.paymentStatus === PAYMENT_STATUS.PAID) {
+                throw new OrderRequestError(
+                    409,
+                    "This order is already marked as paid."
+                );
+            }
+
+            if (order.paymentStatus !== PAYMENT_STATUS.PENDING) {
+                throw new OrderRequestError(
+                    409,
+                    "This order is not awaiting payment."
+                );
+            }
+
+            const result = await tx.order.updateMany({
+                where: {
+                    id,
+                    paymentMethod: PAYMENT_METHOD.COD,
+                    paymentStatus: PAYMENT_STATUS.PENDING,
+                    status: ORDER_STATUS.DELIVERED,
+                },
+                data: {
+                    paymentStatus: PAYMENT_STATUS.PAID,
+                },
+            });
+
+            if (result.count !== 1) {
+                throw new OrderRequestError(
+                    409,
+                    "Order payment state changed. Refresh and try again."
+                );
+            }
+
+            return tx.order.findUnique({
+                where: { id },
+                include: { items: true },
+            });
+        });
+
+        return res.json({ order: updated });
+    } catch (error) {
+        if (error instanceof ApiError) {
+            return sendApiError(res, error);
+        }
+
+        if (error instanceof OrderRequestError) {
+            return res.status(error.status).json({
+                error: error.message,
+            });
+        }
+
+        return handleControllerError(
+            res,
+            error,
+            "markCodPaymentReceived error:"
+        );
+    }
+}
+
