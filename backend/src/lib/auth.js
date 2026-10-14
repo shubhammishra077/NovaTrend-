@@ -5,7 +5,10 @@ import { admin } from "better-auth/plugins";
 import { prisma } from "./prisma.js";
 import { ROLE } from "./api-constants.js";
 import { ac, buyer, seller, admin as adminRole } from "./permissions.js";
-import { sendPasswordResetEmail } from "./emails.js";
+import {
+    sendPasswordResetEmail,
+    sendEmailVerificationEmail,
+} from "./emails.js";
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -26,6 +29,7 @@ export const auth = betterAuth({
 
     emailAndPassword: {
         enabled: true,
+        requireEmailVerification: true,
         revokeSessionsOnPasswordReset: true,
         sendResetPassword: async ({ user, url }) => {
             await sendPasswordResetEmail({
@@ -33,6 +37,17 @@ export const auth = betterAuth({
                 url,
             });
         },
+    },
+
+    emailVerification: {
+        sendVerificationEmail: async ({ user, url }) => {
+            await sendEmailVerificationEmail({
+                to: user.email,
+                url,
+            });
+        },
+        sendOnSignUp: true,
+        autoSignInAfterVerification: true,
     },
 
     socialProviders: {
